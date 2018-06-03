@@ -2,8 +2,7 @@ const socket = io()
 
 $(() => {
     $("#send").click(() => {
-        let msg = { name: $('#name').val(), text: $("#message").val()}
-        console.log(msg)
+        let msg = { name: $('#name').val(), message: $("#message").val()}
         postMsg(msg)
     })
     getMsg()
@@ -12,7 +11,7 @@ $(() => {
 socket.on('message', addMsg)
 
 function addMsg(message) {
-    $("#messages").append(`<h4> ${message.name} </h4> <p> ${message.text} </p>`)
+    $("#messages").append(`<h4> ${message.name} </h4> <p> ${message.message} </p>`)
 }
 
 function getMsg() {
@@ -24,6 +23,5 @@ function getMsg() {
 function postMsg(msg) {
     $.post('http://localhost:3001/messages', msg, (data) => {
         console.log('posting', data)
-        data.forEach(addMsg);
     })
 }

@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const { mLab } = require('./credentials')
+
+const db = require('./db/mongo')
 
 const app = express()
 const http = require('http').Server(app)
@@ -10,25 +12,36 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
-const dbUrl = `mongodb://<dbuser>:<dbpassword>@ds241570.mlab.com:41570/chat_test_v1`
-
-const messages = [{
-    name: 'bob',
-    text: 'whats up?'
-},{
-     name: 'john',
-     text: 'Nothin much'
-}]
-
 app.get('/messages', (req, res) => {
-    res.send(messages)
+    db.allMessages()
+        .then(messages => {
+            res.send(messages)
+        })
+        .catch(err => {
+            res.sendStatus(500)
+            console.log(err)
+        })
 })
 
 app.post('/messages', (req, res) => {
-    console.log(req.body)
-    io.emit('message', req.body)
-    messages.push(req.body)
-    res.sendStatus(200, messages)
+    db.saveMsg(req.body)
+        .then(() => {
+            console.log('saved')
+            return db.checkForProfanity()
+        })
+        .then((censored, err) => {
+            if(censored) {
+                console.log('censored word found')
+                console.log(censored)
+                return db.deleteMsg(censored)
+            }
+            io.emit('message', req.body)
+            res.sendStatus(200)
+        })
+        .catch((err) => {
+            res.sendStatus(500)
+            console.log(err)
+        })
 })
 
 io.on('connection', (socket) => {
