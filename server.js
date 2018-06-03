@@ -24,22 +24,24 @@ app.get('/messages', (req, res) => {
 })
 
 app.post('/messages', async (req, res) => {
-    const savedMessage = await db.saveMsg(req.body)
+    try {
+        const savedMessage = await db.saveMsg(req.body)
+        const censored = await db.checkForProfanity()
+    
+        if (censored) {
+            await db.deleteMsg(censored)
+        } else {
+            io.emit('message', req.body)
+        }
+    
+        res.sendStatus(200)
 
-    const censored = await db.checkForProfanity()
-
-    if (censored) {
-        await db.deleteMsg(censored)
-    } else {
-        io.emit('message', req.body)
+    } catch (err) {
+        res.sendStatus(500)
+        console.log(err)
+    } finally {
+        console.log('post complete')
     }
-
-    res.sendStatus(200)
-        
-        // .catch((err) => {
-        //     res.sendStatus(500)
-        //     console.log(err)
-        // })
 })
 
 io.on('connection', (socket) => {
