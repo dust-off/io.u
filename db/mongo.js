@@ -28,4 +28,7 @@ module.exports = {
     deleteMsg: (msg) => {
         return Message.remove({ _id: msg.id })
     },
+    userMsgs: (name) => {
+        return Message.find({ name })
+    }
 }
