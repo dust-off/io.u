@@ -23,6 +23,18 @@ app.get('/messages', (req, res) => {
         })
 })
 
+app.get('/messages/:id', async (req, res) => {
+    const name = req.params.id
+    console.log(name)
+    try {
+        const msgs = await db.userMsgs(name)
+        res.send(msgs)
+    } catch (error) {
+        res.sendStatus(500)
+        console.log('id error?', error)
+    }
+})
+
 app.post('/messages', async (req, res) => {
     try {
         const savedMessage = await db.saveMsg(req.body)
