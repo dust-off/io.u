@@ -23,25 +23,25 @@ app.get('/messages', (req, res) => {
         })
 })
 
-app.post('/messages', (req, res) => {
-    db.saveMsg(req.body)
-        .then(() => {
-            console.log('saved')
-            return db.checkForProfanity()
-        })
-        .then((censored, err) => {
-            if(censored) {
-                console.log('censored word found')
-                console.log(censored)
-                return db.deleteMsg(censored)
-            }
+app.post('/messages', async (req, res) => {
+    try {
+        const savedMessage = await db.saveMsg(req.body)
+        const censored = await db.checkForProfanity()
+    
+        if (censored) {
+            await db.deleteMsg(censored)
+        } else {
             io.emit('message', req.body)
-            res.sendStatus(200)
-        })
-        .catch((err) => {
-            res.sendStatus(500)
-            console.log(err)
-        })
+        }
+    
+        res.sendStatus(200)
+
+    } catch (err) {
+        res.sendStatus(500)
+        console.log(err)
+    } finally {
+        console.log('post complete')
+    }
 })
 
 io.on('connection', (socket) => {
